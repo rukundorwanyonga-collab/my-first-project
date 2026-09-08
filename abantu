@@ -1,0 +1,422 @@
+import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+import "../providers/app_provider.dart";
+import "../models/umuntu.dart";
+
+class MembersListScreen extends StatefulWidget {
+  const MembersListScreen({super.key});
+
+  @override
+  _MembersListScreenState createState() => _MembersListScreenState();
+}
+
+class _MembersListScreenState extends State<MembersListScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final provider = Provider.of<AppProvider>(context);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        title: const Text(
+          "Abanyamuryango",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        actions: [
+          if (provider.canWrite)
+            IconButton(
+              icon: const Icon(Icons.person_add, color: Color(0xFF6C63FF)),
+              onPressed: () => _showAddMember(provider),
+            ),
+        ],
+      ),
+      body: provider.abantu.isEmpty
+          ? const Center(child: Text("Nta banyamuryango"))
+          : ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: provider.abantu.length,
+              itemBuilder: (context, index) {
+                final umuntu = provider.abantu[index];
+                return _buildContactTile(umuntu, provider);
+              },
+            ),
+    );
+  }
+
+  // ============================
+  // CONTACT TILE
+  // ============================
+  Widget _buildContactTile(Umuntu umuntu, AppProvider provider) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 6),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C63FF), Color(0xFF5A52E5)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: Text(
+              umuntu.izina.substring(0, 1).toUpperCase(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+        ),
+        title: Text(
+          umuntu.izina,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          "Umusanzu: ${umuntu.umusanzu.toStringAsFixed(0)} • Ingoboka: ${umuntu.ingoboka.toStringAsFixed(0)} RWF",
+          style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (provider.canWrite) ...[
+              IconButton(
+                icon: const Icon(Icons.savings, color: Colors.green, size: 18),
+                onPressed: () => _showAddUmusanzu(umuntu),
+                tooltip: "Umusanzu",
+              ),
+              IconButton(
+                icon: const Icon(Icons.volunteer_activism, color: Colors.blue, size: 18),
+                onPressed: () => _showAddIngoboka(umuntu),
+                tooltip: "Ingoboka",
+              ),
+              IconButton(
+                icon: const Icon(Icons.gavel, color: Colors.orange, size: 18),
+                onPressed: () => _showAddAmande(umuntu),
+                tooltip: "Amande",
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.purple, size: 18),
+                onPressed: () => _showEditMember(umuntu),
+                tooltip: "Edit",
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                onPressed: () => _showDeleteMember(umuntu, provider),
+                tooltip: "Delete",
+              ),
+            ],
+          ],
+        ),
+        onTap: () => _showMemberDetails(umuntu),
+      ),
+    );
+  }
+
+  // ============================
+  // DETAILS - Scrollable
+  // ============================
+  void _showMemberDetails(Umuntu umuntu) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (ctx, scrollController) => Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(umuntu.izina, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.phone, color: Colors.blue),
+                      title: const Text("Phone"),
+                      subtitle: Text(umuntu.phone),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.savings, color: Colors.teal),
+                      title: const Text("Umusanzu"),
+                      subtitle: Text("${umuntu.umusanzu.toStringAsFixed(0)} RWF"),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.volunteer_activism, color: Colors.blue),
+                      title: const Text("Ingoboka"),
+                      subtitle: Text("${umuntu.ingoboka.toStringAsFixed(0)} RWF"),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.gavel, color: Colors.orange),
+                      title: const Text("Amande"),
+                      subtitle: Text("${umuntu.amande.toStringAsFixed(0)} RWF"),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.warning, color: Colors.red),
+                      title: const Text("Ideni ku Musanzu Utatanzwe"),
+                      subtitle: Text("${umuntu.ideniKUmusanzuUtatanzwe.toStringAsFixed(0)} RWF"),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.account_balance, color: Colors.purple),
+                      title: const Text("Igiteranyo"),
+                      subtitle: Text("${umuntu.igiteranyo.toStringAsFixed(0)} RWF"),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today, color: Colors.grey),
+                      title: const Text("Itariki"),
+                      subtitle: Text(umuntu.itariki),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================
+  // ADD UMUNTU MUSHYA - Amakuru yose
+  // ============================
+  void _showAddMember(AppProvider provider) {
+    final izinaController = TextEditingController();
+    final phoneController = TextEditingController();
+    final umusanzuController = TextEditingController();
+    final ingobokaController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Kongera Umuntu Mushya"),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: izinaController, decoration: const InputDecoration(labelText: "Izina", prefixIcon: Icon(Icons.person))),
+              const SizedBox(height: 8),
+              TextField(controller: phoneController, decoration: const InputDecoration(labelText: "Phone", prefixIcon: Icon(Icons.phone))),
+              const SizedBox(height: 8),
+              TextField(controller: umusanzuController, decoration: const InputDecoration(labelText: "Umusanzu (RWF)", prefixIcon: Icon(Icons.savings)), keyboardType: TextInputType.number),
+              const SizedBox(height: 8),
+              TextField(controller: ingobokaController, decoration: const InputDecoration(labelText: "Ingoboka (RWF)", prefixIcon: Icon(Icons.volunteer_activism)), keyboardType: TextInputType.number),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              final izina = izinaController.text;
+              final phone = phoneController.text;
+              final umusanzu = double.tryParse(umusanzuController.text) ?? 0.0;
+              final ingoboka = double.tryParse(ingobokaController.text) ?? 0.0;
+              if (izina.isNotEmpty) {
+                provider.addUmuntu(izina, phone);
+                if (umusanzu > 0) {
+                  final id = provider.abantu.last.id;
+                  provider.tangaUmusanzu(id, umusanzu);
+                }
+                if (ingoboka > 0) {
+                  final id = provider.abantu.last.id;
+                  provider.tangaIngoboka(id, ingoboka);
+                }
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text("Kongera"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================
+  // EDIT MEMBER - Amakuru yose
+  // ============================
+  void _showEditMember(Umuntu umuntu) {
+    final izinaController = TextEditingController(text: umuntu.izina);
+    final phoneController = TextEditingController(text: umuntu.phone);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Guhindura Umuntu"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: izinaController, decoration: const InputDecoration(labelText: "Izina")),
+            const SizedBox(height: 8),
+            TextField(controller: phoneController, decoration: const InputDecoration(labelText: "Phone")),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              if (izinaController.text.isNotEmpty) {
+                setState(() {
+                  umuntu.izina = izinaController.text;
+                  umuntu.phone = phoneController.text;
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text("Bika"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================
+  // DELETE MEMBER
+  // ============================
+  void _showDeleteMember(Umuntu umuntu, AppProvider provider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Gusiba"),
+        content: Text("Urabyemeza ko ushaka gusiba ${umuntu.izina}?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              provider.abantu.removeWhere((m) => m.id == umuntu.id);
+              Navigator.pop(ctx);
+            },
+            child: const Text("Gusiba"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================
+  // ADD UMUSANZU
+  // ============================
+  void _showAddUmusanzu(Umuntu umuntu) {
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Umusanzu - ${umuntu.izina}"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: amountController, decoration: const InputDecoration(labelText: "Amafaranga (RWF)", prefixIcon: Icon(Icons.savings)), keyboardType: TextInputType.number),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              final amount = double.tryParse(amountController.text) ?? 0.0;
+              if (amount > 0) {
+                provider.tangaUmusanzu(umuntu.id, amount);
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text("Kongera"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================
+  // ADD INGOBOKA
+  // ============================
+  void _showAddIngoboka(Umuntu umuntu) {
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Ingoboka - ${umuntu.izina}"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: amountController, decoration: const InputDecoration(labelText: "Ingoboka (RWF)", prefixIcon: Icon(Icons.volunteer_activism)), keyboardType: TextInputType.number),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              final amount = double.tryParse(amountController.text) ?? 0.0;
+              if (amount > 0) {
+                provider.tangaIngoboka(umuntu.id, amount);
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text("Kongera"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================
+  // ADD AMANDE
+  // ============================
+  void _showAddAmande(Umuntu umuntu) {
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final amountController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Amande - ${umuntu.izina}"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: amountController, decoration: const InputDecoration(labelText: "Amande (RWF)", prefixIcon: Icon(Icons.gavel)), keyboardType: TextInputType.number),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              final amount = double.tryParse(amountController.text) ?? 0.0;
+              if (amount > 0) {
+                provider.tangaAmande(umuntu.id, amount);
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text("Kongera"),
+          ),
+        ],
+      ),
+    );
+  }
+}
